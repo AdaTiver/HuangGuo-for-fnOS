@@ -1,17 +1,277 @@
-# HuangGuo ShortDrama v0.7.0 - fnOS unified gateway
+# 🍿 HuangGuo for fnOS
 
-This version uses fnOS unified gateway: **/app/huangguo-shortdrama/**.
-The desktop entry has `gatewayPrefix`, `gatewaySocket`, `microApp`, and `type=iframe`; the package manifest sets `micro_app=true`.
-The app-local service listens **only** on Unix socket `app.sock` in the installed target directory; it does not listen on TCP port 18787. No Docker and no extra deployed server.
+**黄果短剧 · 飞牛 NAS 第三方客户端**
 
-The client UI is independently authored; it is not an iframe embedding the official website. fnOS embeds the *app's own* UI in the desktop app window. The API adapter calls Huangguo official APIs as before. Playback main stream and HEVC fallback, search, history, favorites and proxy settings are preserved. Recent Updates scans the official JSON API (up to 200 items).
+一款专为飞牛 fnOS 打造的轻量化短剧客户端，采用独立设计的黑金风格 UI，通过黄果短剧相关接口获取内容，为 fnOS 用户提供便捷、清爽的短剧浏览与在线观看体验。
 
-**Remote access:** Once the user can open their existing fnOS desktop through an authorized remote channel, the HuangGuo app uses the *same* fnOS domain and login session without exposing its own port. This does not create new WAN access if the NAS itself is unreachable.
+支持飞牛 NAS 原生 FPK 安装，无需 Docker，无需手动安装 Python 环境。
 
-**Upgrade:** package app ID remains `huangguo.shortdrama`. Upgrade without uninstalling to preserve package data. Browser-side saved history and favorites remain linked to their origin; switching from direct port to unified gateway changes the browser origin/path, so existing browser localStorage may need to be copied manually. The user should not delete the old data beforehand.
+> ⭐ 如果你觉得这个项目对你有帮助，欢迎点个 Star 支持一下！
 
-**Known limitation:** This package has been locally verified with a Unix-socket mock of the fnOS route. Real fnOS gateway registration, socket file permissions and remote session handling need verification on a real NAS.
+---
 
-Build: `sh build_fpk.sh /mnt/data/HGV070.fpk`.
+## 📖 项目介绍
 
-Licenses: retain existing `LICENSE`, `LICENSE-HGHUB.txt`, `PYTHON_LICENSE.txt`, `GLIBC_LICENSE.txt`, `THIRD_PARTY_LICENSES.txt`; the HGhub-derived portions are for noncommercial use only.
+**HuangGuo for fnOS** 是一个面向飞牛 NAS（fnOS）平台开发的非官方黄果短剧客户端。
+
+本项目参考并使用了 [HGhub](https://github.com/Minireel/HGhub) 的部分技术实现，在此基础上针对 fnOS 平台进行了适配、功能扩展及独立客户端界面设计。
+
+与直接通过浏览器访问官网不同，本项目采用独立设计的客户端 UI，将短剧推荐、搜索、分类、排行榜、剧集播放、观看记录和收藏等功能整合在一个应用中。
+
+项目旨在为飞牛 NAS 用户提供更加统一、便捷的短剧观看体验。
+
+### ✨ 项目特点
+
+- 📦 **原生应用安装**：支持飞牛 fnOS FPK 格式，无需 Docker
+- 🎨 **独立客户端界面**：黑金配色设计，不直接嵌入官网网页
+- 🎬 **短剧在线播放**：支持分集选择、全屏播放与 HLS 视频播放
+- 🔥 **热门短剧推荐**：浏览热门作品与潜力榜单
+- 🆕 **最近上新**：通过相关 API 获取最新更新内容
+- 🔍 **搜索与分类**：支持按名称搜索及题材分类浏览
+- ❤️ **我的收藏**：收藏喜欢的短剧
+- 🕒 **观看记录**：记录已观看的短剧，方便再次进入
+- 🌐 **网络代理支持**：支持 HTTP / SOCKS5 自定义代理
+- ⚡ **轻量化运行**：无需 Docker 容器，应用内置所需运行组件
+
+---
+
+## 🖥️ 界面与功能
+
+### 🏠 首页推荐
+
+展示短剧推荐内容，支持通过封面快速进入详情页面。
+
+### 🔥 热门榜单
+
+查看热门及潜力短剧，方便发现更多感兴趣的作品。
+
+### 🆕 最近上新
+
+通过黄果短剧相关 API 获取短剧列表，并根据返回的更新时间等信息进行排序。
+
+由于接口提供的数据范围可能有限，该功能不保证与官网「最近上新」页面的内容和排序完全一致。
+
+### 🔍 搜索与分类
+
+支持通过关键词搜索短剧，并按都市、古风、奇幻、职场、逆袭、校园等题材筛选内容。
+
+### 🎬 视频播放
+
+内置视频播放界面，支持：
+
+- 剧集选择与切换
+- HTML5 视频播放
+- HLS 流媒体播放
+- 播放器全屏功能
+- 播放线路选择
+
+播放功能依赖上游接口提供的有效播放地址，部分内容可能受到网络环境、接口调整或访问权限的影响。
+
+### ❤️ 收藏与观看记录
+
+支持在客户端内收藏短剧、查看观看历史。
+
+相关数据默认保存在当前客户端的本地浏览器存储中，不保证跨设备同步。
+
+### 🌐 网络与代理设置
+
+支持自定义 HTTP / SOCKS5 代理，包括代理地址、端口以及可选的身份认证信息。
+
+默认关闭自定义代理，可根据个人网络环境自行配置。
+
+---
+
+## 🛠️ 技术架构
+
+| 项目 | 技术 |
+|---|---|
+| 运行平台 | 飞牛 fnOS |
+| 适配架构 | x86_64 |
+| 应用格式 | FPK |
+| 后端 | Python / FastAPI |
+| 前端 | HTML / CSS / JavaScript |
+| 视频播放 | HTML5 Video / HLS.js |
+| 内容数据 | 黄果短剧相关 API |
+| 网络代理 | HTTP / SOCKS5 |
+| 本地存储 | 浏览器 LocalStorage / 应用私有目录 |
+
+### 工作原理
+
+```text
+┌──────────────────────────────┐
+│        飞牛 fnOS 桌面         │
+│                              │
+│       HuangGuo for fnOS      │
+│         独立客户端 UI         │
+└──────────────┬───────────────┘
+               │
+               ▼
+┌──────────────────────────────┐
+│      应用内置 API 适配服务     │
+│        Python / FastAPI      │
+└──────────────┬───────────────┘
+               │
+               ▼
+┌──────────────────────────────┐
+│        黄果短剧相关 API       │
+│       内容 / 剧集 / 播放      │
+└──────────────────────────────┘
+```
+
+本项目不直接嵌入黄果短剧官网页面，而是采用自行设计的客户端界面，通过应用内置的 API 适配层请求上游数据。
+
+应用随 FPK 安装后由 fnOS 管理运行，无需用户单独部署 Docker 或其他服务器。
+
+**注意：** FPK 应用仍然运行在 NAS 上。是否可以通过外网访问，取决于 fnOS 远程访问、应用网关及实际网络环境。
+
+---
+
+## 📦 安装教程
+
+### 环境要求
+
+- 飞牛 fnOS 系统
+- x86_64 架构设备
+- 可以访问黄果短剧相关服务的网络环境
+
+### 安装步骤
+
+**1. 下载安装包**
+
+前往项目的 GitHub Releases 页面，下载最新版本的 `.fpk` 文件。
+
+**2. 安装应用**
+
+打开飞牛 fnOS 应用中心，选择手动安装，将下载的 FPK 文件上传并安装。
+
+**3. 启动应用**
+
+安装完成后，在飞牛桌面找到「黄果短剧」图标，点击即可打开客户端。
+
+**4. 配置网络（可选）**
+
+如果无法正常获取内容，可以打开应用中的「网络设置」，根据实际环境配置 HTTP 或 SOCKS5 代理。
+
+### 升级说明
+
+建议通过 fnOS 的应用升级功能安装新版本，不要直接卸载旧版，以免造成部分应用配置丢失。
+
+---
+
+## 📁 项目目录
+
+```text
+HuangGuo-for-fnOS/
+├── app/
+│   ├── web/
+│   │   ├── server.py
+│   │   └── www/
+│   │       └── index.html
+│   ├── ui/
+│   └── runtime/
+├── package/
+│   ├── cmd/
+│   ├── config/
+│   ├── wizard/
+│   └── manifest.template
+├── tests/
+├── build_fpk.sh
+└── README.md
+```
+
+其中：
+
+- `app/web/`：客户端界面与 API 适配服务
+- `app/ui/`：fnOS 应用入口及图标资源
+- `app/runtime/`：应用运行所需的内置组件
+- `package/`：fnOS 安装包配置及生命周期脚本
+- `tests/`：基础功能测试
+- `build_fpk.sh`：FPK 打包脚本
+
+---
+
+## 🔧 开发与构建
+
+项目提供 FPK 构建脚本，可在具备相关构建工具的 Linux 环境中执行。
+
+```bash
+chmod +x build_fpk.sh
+./build_fpk.sh ./HuangGuo.fpk
+```
+
+生成的 FPK 文件可通过飞牛应用中心进行安装。
+
+实际构建环境应满足脚本及内置运行组件的要求。
+
+---
+
+## 🙏 致谢 / Acknowledgements
+
+### ❤️ 特别感谢 HGhub
+
+特别感谢 **[HGhub](https://github.com/Minireel/HGhub)** 项目及其开发者 **[Minireel](https://github.com/Minireel)**！
+
+本项目在开发过程中参考并使用了 HGhub 的部分技术实现，包括黄果短剧 API 接入、数据解析及视频播放相关逻辑。
+
+HGhub 为本项目提供了重要的技术参考和开发基础，使黄果短剧相关功能能够进一步适配到飞牛 fnOS 平台。
+
+在此向 HGhub 原作者的技术分享与源码贡献表示诚挚感谢！
+
+**原项目：** [Minireel/HGhub](https://github.com/Minireel/HGhub)
+
+本项目在参考 HGhub 的基础上，主要针对飞牛 fnOS 平台进行了客户端界面设计、FPK 应用集成、网络代理配置及相关功能适配。
+
+同时感谢所有参与开源软件开发、维护与技术分享的开发者。
+
+开源让更多想法成为可能。❤️
+
+---
+
+## ⚠️ 免责声明
+
+1. 本项目为非官方第三方客户端，与黄果短剧官方及 HGhub 原作者不存在官方合作、授权或隶属关系。
+
+2. 本项目仅用于个人学习、技术研究及非商业用途，不鼓励或支持侵犯版权的行为。
+
+3. 本项目不自行提供、存储或分发短剧视频资源。相关内容、商标及版权归原权利人所有。
+
+4. 项目部分功能依赖第三方接口。接口发生变更、服务不可用或访问权限调整时，可能导致部分功能失效。
+
+5. 使用本项目时，请遵守相关网站的服务条款、适用法律法规及版权规定。
+
+6. 因使用本项目产生的网络访问、账号安全或其他问题，使用者应自行评估风险。
+
+7. 如相关权利人认为项目内容存在侵权或其他问题，可通过 GitHub Issues 联系维护者处理。
+
+---
+
+## 📄 开源许可 / License
+
+本项目参考并使用了 HGhub 的部分实现代码。
+
+HGhub 使用 **PolyForm Noncommercial License 1.0.0**。该许可证对商业用途存在限制，因此本项目中涉及 HGhub 的相关代码及衍生部分，应遵循原项目的许可证要求。
+
+项目保留相关第三方版权声明、许可证及依赖说明。
+
+请注意，**PolyForm Noncommercial 并非 OSI 认可的开源许可证**。本项目公开源码不代表允许无限制的商业使用。
+
+在未明确核实所有代码及依赖的授权条件前，不应将整个项目简单标记为 MIT、Apache-2.0 等许可证。
+
+---
+
+## ⭐ 支持项目
+
+如果 HuangGuo for fnOS 对你有所帮助，欢迎：
+
+- ⭐ 给项目点一个 Star
+- 🐛 通过 Issues 反馈问题
+- 💡 提出功能建议
+- 🔧 通过 Pull Request 参与完善
+
+你的支持是项目持续改进的动力！
+
+---
+
+**HuangGuo for fnOS**
+
+*让短剧观看更简单，让飞牛 NAS 多一种可能。* 🍿
