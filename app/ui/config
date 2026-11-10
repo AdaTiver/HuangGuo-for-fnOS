@@ -1,0 +1,15 @@
+{
+  ".url": {
+    "huangguo.shortdrama.main": {
+      "title": "黄果短剧",
+      "icon": "images/icon_{0}.png",
+      "type": "iframe",
+      "protocol": "",
+      "url": "/app/huangguo-shortdrama/",
+      "allUsers": true,
+      "microApp": true,
+      "gatewayPrefix": "/app/huangguo-shortdrama",
+      "gatewaySocket": "app.sock"
+    }
+  }
+}

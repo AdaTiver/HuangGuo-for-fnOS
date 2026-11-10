@@ -1,0 +1,11 @@
+[
+  {
+    "stepTitle": "卸载说明",
+    "items": [
+      {
+        "type": "tips",
+        "helpText": "此版本不依赖 Docker。收藏与观看历史储存在浏览器端。"
+      }
+    ]
+  }
+]

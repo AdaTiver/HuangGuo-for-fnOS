@@ -1,0 +1,102 @@
+#!/bin/sh
+# HuangGuo fnOS unified gateway; package-private Unix socket, no public TCP port.
+set -u
+APPNAME=huangguo.shortdrama
+LOGFILE="${TRIM_TEMP_LOGFILE:-}"
+log_error() {
+  msg="$1"
+  printf '%s\n' "$msg" >&2
+  if [ -n "$LOGFILE" ]; then printf '%s\n' "$msg" >> "$LOGFILE" 2>/dev/null || :; fi
+}
+APP=""
+for cand in "${TRIM_APPDEST:-}" "${TRIM_APPDEST:-}/target" "${TRIM_APPDEST:-}/app" \
+            "/var/apps/$APPNAME/target" "/var/apps/$APPNAME" \
+            "$(CDPATH= cd -- "$(dirname -- "$0")/.." 2>/dev/null && pwd)/target" \
+            "$(CDPATH= cd -- "$(dirname -- "$0")/.." 2>/dev/null && pwd)/app"; do
+  [ -n "$cand" ] || continue
+  if [ -f "$cand/web/server.py" ] && [ -x "$cand/runtime/bin/python3.13" ]; then
+    APP="$cand"
+    break
+  fi
+done
+if [ -z "$APP" ]; then log_error 'Cannot locate installed HuangGuo files'; exit 1; fi
+RT="$APP/runtime"
+VAR="${TRIM_PKGVAR:-/var/apps/$APPNAME/var}"
+SOCKET="$APP/app.sock"
+PID="$VAR/server.pid"
+LOG="$VAR/server.log"
+PY="$RT/bin/python3.13"
+LOADER="$RT/lib64/ld-linux-x86-64.so.2"
+if [ ! -x "$LOADER" ]; then log_error 'Bundled runtime loader is not executable'; exit 1; fi
+export PYTHONHOME="$RT"
+export PYTHONPATH="$RT/lib/python3.13/site-packages:$APP/web"
+export PYTHONDONTWRITEBYTECODE=1
+export HGHUB_BASE="${HGHUB_BASE:-https://huangguoai.com}"
+export TRIM_PKGVAR="$VAR"
+unset HGHUB_PROXY
+health() {
+  [ -S "$SOCKET" ] || return 1
+  "$LOADER" --library-path "$RT/lib64" "$PY" -c '
+import socket,sys
+s=socket.socket(socket.AF_UNIX)
+s.settimeout(2)
+s.connect(sys.argv[1])
+s.sendall(b"GET /app/huangguo-shortdrama/api/health HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\n\r\n")
+d=b""
+while b"\r\n\r\n" not in d:
+    c=s.recv(1024)
+    if not c: break
+    d+=c
+s.close()
+sys.exit(0 if b" 200 " in d.split(b"\r\n",1)[0] else 1)
+' "$SOCKET" >/dev/null 2>&1
+}
+start() {
+  if ! mkdir -p "$VAR" 2>/dev/null; then log_error 'Cannot write package data directory'; exit 1; fi
+  if health; then exit 0; fi
+  if [ -f "$PID" ]; then
+    p="$(cat "$PID" 2>/dev/null || :)"
+    case "$p" in *[!0-9]*|'') : ;; *) if kill -0 "$p" 2>/dev/null; then log_error 'Process is running but gateway socket is not healthy'; exit 1; fi ;; esac
+    rm -f "$PID"
+  fi
+  [ ! -S "$SOCKET" ] || rm -f "$SOCKET" || { log_error 'Unable to clean stale gateway socket'; exit 1; }
+  cd "$APP/web" || exit 1
+  # Permit fnOS gateway to connect to the Unix socket; no listener on TCP 18787.
+  umask 0007
+  "$LOADER" --library-path "$RT/lib64" "$PY" -m uvicorn server:gateway_app --uds "$SOCKET" --workers 1 > "$LOG" 2>&1 </dev/null &
+  p=$!
+  echo "$p" > "$PID" || { log_error 'Cannot write PID'; exit 1; }
+  i=0
+  while [ "$i" -lt 15 ]; do
+    if health; then exit 0; fi
+    if ! kill -0 "$p" 2>/dev/null; then break; fi
+    sleep 1
+    i=$((i+1))
+  done
+  log_error 'HuangGuo gateway service failed to start; latest log follows:'
+  tail -n 40 "$LOG" >&2 2>/dev/null || :
+  rm -f "$PID"
+  exit 1
+}
+stop() {
+  if [ -f "$PID" ]; then
+    p="$(cat "$PID" 2>/dev/null || :)"
+    case "$p" in *[!0-9]*|'') : ;; *)
+      if kill -0 "$p" 2>/dev/null; then
+        kill "$p" 2>/dev/null || :
+        i=0
+        while [ "$i" -lt 10 ] && kill -0 "$p" 2>/dev/null; do sleep 1; i=$((i+1)); done
+      fi
+    ;; esac
+    rm -f "$PID"
+  fi
+  # Safe only if the socket is not serving requests.
+  if ! health; then [ ! -S "$SOCKET" ] || rm -f "$SOCKET" 2>/dev/null || :; fi
+}
+status() { if health; then exit 0; else exit 3; fi; }
+case "${1:-}" in
+  start) start ;;
+  stop) stop ;;
+  status) status ;;
+  *) log_error 'usage: main {start|stop|status}'; exit 2 ;;
+esac

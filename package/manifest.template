@@ -1,0 +1,15 @@
+appname               = huangguo.shortdrama
+version               = 0.7.0
+display_name          = 黄果短剧
+desc                  = 黄果短剧独立客户端；通过 fnOS 统一网关进入，无需开放应用端口。
+platform              = x86
+source                = thirdparty
+maintainer            = Personal Use Build
+maintainer_url        = https://github.com/Minireel/HGhub
+distributor           = Personal Use
+os_min_version        = 1.2.0
+desktop_uidir         = ui
+desktop_applaunchname = huangguo.shortdrama.main
+ctl_stop              = true
+checksum              = 30f7330363fb5b75e59979347a407baa
+micro_app             = true

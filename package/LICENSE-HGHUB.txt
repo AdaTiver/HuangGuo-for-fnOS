@@ -1,0 +1,14 @@
+HGhub upstream license notice
+
+The compatibility work in this personal-use package is based on publicly documented behavior and selected implementation details from:
+HGhub — https://github.com/Minireel/HGhub
+
+License: PolyForm Noncommercial License 1.0.0
+https://polyformproject.org/licenses/noncommercial/1.0.0
+
+Required Notice: Copyright (c) 2026 HGhub contributors (https://github.com/Minireel/HGhub)
+
+Permitted scope: personal study, research, testing, private entertainment and other noncommercial purposes, subject to the license terms.
+Not permitted: commercial use, paid redistribution, advertising/monetization, or use as part of a commercial product or service.
+
+This NAS adaptation is an unofficial personal-use project. It is not affiliated with, endorsed by, or operated by Huangguo or the HGhub contributors. It does not store or redistribute video files. Use only content you are authorized to access and comply with applicable terms and law.

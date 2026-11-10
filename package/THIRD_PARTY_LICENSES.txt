@@ -1,0 +1,3 @@
+本安装包包含 Python 3.13 标准库和第三方 Python 包；须遵守各原始组件许可。
+基础组件许可证文件：PYTHON_LICENSE.txt 与 GLIBC_LICENSE.txt。
+更多组件许可证信息及对应版本可参阅源项目的包分发和 Python 软件包元数据。
