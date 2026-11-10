@@ -274,4 +274,4 @@ HGhub 使用 **PolyForm Noncommercial License 1.0.0**。该许可证对商业用
 
 **HuangGuo for fnOS**
 
-*让短剧观看更简单，让飞牛 NAS 多一种可能。* 🍿
+AI写的介绍 AI写的程序。稳定性未知！！！
